@@ -1,0 +1,271 @@
+{
+  "name": "Job Hunter",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2ecf09d9-b9e6-4cb3-bd51-2183ec0371a9",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst md = item.data?.markdown ?? item.markdown ?? '';\n\nconst want = ['backend', 'node', 'mern', 'sde', 'software engineer', 'engineer', 'developer', 'devops', 'full stack', 'fullstack', 'intern', 'fresher', 'trainee'];\nconst skip = ['senior', 'lead', 'manager', 'principal', 'architect', 'sales'];\n\nconst re = /\\[([^\\]]+?)\\\\?<br>\\\\?<br>([^\\]]+?)\\]\\((https?:\\/\\/[^)\\s]+)\\)/g;\nconst out = [];\nlet m;\nwhile ((m = re.exec(md)) !== null) {\n  const title = m[1].replace(/New$/, '').trim();\n  const t = title.toLowerCase();\n  if (want.some(w => t.includes(w)) && !skip.some(s => t.includes(s))) {\n    out.push({ json: { title, location: m[2].trim(), link: m[3] } });\n  }\n}\nreturn out;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        128
+      ],
+      "id": "6b651c4f-cb30-4c00-89f7-896abe1ebc5c",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "391cde95-5f3b-45d0-8d86-0c4dfc44ac10",
+              "name": "title",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "id": "e0e8ccc7-0796-4f2c-b7b3-c33709f5dced",
+              "name": "company",
+              "value": "Razorpay",
+              "type": "string"
+            },
+            {
+              "id": "9d179569-c037-4b3b-94ef-fac230cd15d6",
+              "name": "location",
+              "value": "={{ $json.location }}",
+              "type": "string"
+            },
+            {
+              "id": "7c38b8c2-455a-4e20-a555-33a44339ded4",
+              "name": "link",
+              "value": "={{ $json.link }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        880,
+        128
+      ],
+      "id": "4a809d0f-fd48-43ac-b16d-b577060f129c",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "link",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        -272
+      ],
+      "id": "228c647f-3967-424e-8491-5fa9d3fd3cf4",
+      "name": "Remove Duplicates"
+    },
+    {
+      "parameters": {
+        "url": "https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited",
+        "scrapeOptions": {
+          "options": {
+            "formats": {
+              "format": [
+                {}
+              ]
+            },
+            "headers": {},
+            "storeInCache": false
+          }
+        },
+        "requestOptions": {}
+      },
+      "type": "@mendable/n8n-nodes-firecrawl.firecrawl",
+      "typeVersion": 1.1,
+      "position": [
+        288,
+        -208
+      ],
+      "id": "7a4bd6ee-2f84-46bb-af57-c2c788b55e24",
+      "name": "Scrape URL",
+      "credentials": {
+        "firecrawlApi": {
+          "id": "YcdaTsid4HZFEs7I",
+          "name": "Firecrawl account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const jobs = $input.all().map(i => i.json);\nif (jobs.length === 0) return [];\n\nconst rows = jobs.map(j =>\n  `<li><b>${j.title}</b> — ${j.company} (${j.location})<br><a href=\"${j.link}\">Apply here</a></li>`\n).join('');\n\nreturn [{ json: {\n  subject: `Job Hunter: ${jobs.length} matching job(s)`,\n  html: `<ul>${rows}</ul>`\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        144
+      ],
+      "id": "181f0740-3479-4150-9240-1e67276199bc",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "fromEmail": "YOUR_SENDER_EMAIL@example.com",
+        "toEmail": "YOUR_RECIPIENT_EMAIL@example.com",
+        "subject": "={{ $json.subject }}",
+        "html": "={{ $json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1664,
+        144
+      ],
+      "id": "83e7316d-ebfc-416e-9bd7-be12f1dbb6ca",
+      "name": "Send an Email",
+      "webhookId": "78eb1726-5093-453b-8a75-338b1fe0c2b2",
+      "credentials": {
+        "smtp": {
+          "id": "bkxe9jGk1yPaVvpX",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Scrape URL": [
+      {
+        "json": {
+          "success": true,
+          "data": {
+            "markdown": "# Current openings at Razorpay Software Private Limited\n\nCreate a Job Alert\n\nLevel-up your career by having opportunities at Razorpay Software Private Limited sent directly to your inbox.\n\n[Create alert](https://my.greenhouse.io/users/sign_in?job_board=razorpaysoftwareprivatelimited&source=job_alert_board)\n\nSearch\n\nDepartment\n\nSelect...\n\nOffice\n\nSelect...\n\n## 28 jobs\n\n### Business\n\n| Job |\n| --- |\n| [Solutions Consultant\\<br>\\<br>Malaysia](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4721391005) |\n\nBusiness\n\n### Banking\n\n| Job |\n| --- |\n| [Analyst, Banking Alliances New\\<br>\\<br>Bengaluru](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4740728005) |\n| [Analyst, Banking AlliancesNew\\<br>\\<br>Lucknow](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4740730005) |\n\nBusiness / Banking\n\n### Banking Alliances\n\n| Job |\n| --- |\n| [Analyst, Banking AlliancesNew\\<br>\\<br>Chennai](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4741226005) |\n| [Manager, Banking Alliances\\<br>\\<br>Bengaluru](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4727238005) |\n\nBusiness / Banking\n\n### Banking Solutions\n\n| Job |\n| --- |\n| [Group Manager, Banking Solutions\\<br>\\<br>Bengaluru](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4738319005) |\n| [Manager, Banking Solutions\\<br>\\<br>Mumbai](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4738327005) |\n\nBusiness / Business Engineering\n\n### Solutions\n\n| Job |\n| --- |\n| [Forward Deployed Engineer\\<br>\\<br>Bengaluru](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4739199005) |\n\nBusiness / Business Engineering\n\n### Technical Account Management\n\n| Job |\n| --- |\n| [Technical Account Manager\\<br>\\<br>Bengaluru](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4721861005) |\n| [Technical Account Manager \\<br>\\<br>Bengaluru](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4736154005) |\n\nBusiness / Customer Success\n\n### Business Operations\n\n| Job |\n| --- |\n| [Analyst, Business Operations\\<br>\\<br>Bengaluru](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4731043005) |\n\nBusiness\n\n### Finance\n\n| Job |\n| --- |\n| [Executive, FinanceNew\\<br>\\<br>Bengaluru](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4741192005) |\n| [Senior Executive, Finance\\<br>\\<br>Bengaluru](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4731060005) |\n\nBusiness\n\n### GTM Offline First\n\n| Job |\n| --- |\n| [Cluster Manager, Enterprise Sales - Bank & DirectNew\\<br>\\<br>Bengaluru](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4741281005) |\n| [Regional Manger, Enterprise Sales - Bank & DirectNew\\<br>\\<br>Mumbai](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4741230005) |\n| [Senior Territory Manager, Bank Retail & Direct Enterprise Sales\\<br>\\<br>Chennai](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4736132005) |\n\nBusiness\n\n### GTM - SME\n\n| Job |\n| --- |\n| [Technical ConsultantNew\\<br>\\<br>Bengaluru](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4738819005) |\n\nBusiness\n\n### Marketing\n\n| Job |\n| --- |\n| [Manager, AEO\\<br>\\<br>Bengaluru](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4719411005) |\n\nBusiness / Mid Market\n\n### Mid Market Sales\n\n| Job |\n| --- |\n| [Associate Manager, Mid Market Sales\\<br>\\<br>Bengaluru](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4736141005) |\n\nBusiness / Online Payments Sales\n\n### Affordability\n\n| Job |\n| --- |\n| [Manager, Affordability\\<br>\\<br>Bengaluru](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4715361005) |\n\nBusiness / Online Payments Sales\n\n### Cross Border.\n\n| Job |\n| --- |\n| [Manager, Cross Border\\<br>\\<br>Bengaluru](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4704952005) |\n\nBusiness\n\n### People Operations\n\n| Job |\n| --- |\n| [Senior Associate, HRBP Operations (Contract Role)\\<br>\\<br>Bengaluru](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4739576005) |\n\nBusiness / People Operations\n\n### Learning and Development\n\n| Job |\n| --- |\n| [Senior Associate, Learning Business PartnerNew\\<br>\\<br>Bengaluru](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4740305005) |\n\nBusiness\n\n### Risk Management\n\n| Job |\n| --- |\n| [Junior Analyst, Risk Management New\\<br>\\<br>Bengaluru](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4740722005) |\n\nBusiness / SME\n\n### SME Sales\n\n| Job |\n| --- |\n| [Senior Manager, Sales\\<br>\\<br>Singapore](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4709725005) |\n\nBusiness\n\n### Vigilance\n\n| Job |\n| --- |\n| [Assistant Manager, VigilanceNew\\<br>\\<br>Bengaluru](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4741212005) |\n\nDesign\n\n### Communication Design\n\n| Job |\n| --- |\n| [Lead Communication DesignerNew\\<br>\\<br>Bengaluru](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4741222005) |\n\nEngineering\n\n### DevOps\n\n| Job |\n| --- |\n| [DevOps Enginer\\<br>\\<br>Malaysia](https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited/jobs/4730552005) |",
+            "metadata": {
+              "ogUrl": "http://job-boards.greenhouse.io/razorpaysoftwareprivatelimited",
+              "og:description": "",
+              "og:url": "http://job-boards.greenhouse.io/razorpaysoftwareprivatelimited",
+              "og:title": "Razorpay Software Private Limited",
+              "ogDescription": "",
+              "ogTitle": "Razorpay Software Private Limited",
+              "viewport": "width=device-width,initial-scale=1",
+              "language": "en",
+              "og:type": "article",
+              "title": "Jobs at Razorpay Software Private Limited",
+              "scrapeId": "01a1360b-7ba2-77b2-a14d-87973c45e58c",
+              "sourceURL": "https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited",
+              "url": "https://job-boards.greenhouse.io/razorpaysoftwareprivatelimited",
+              "statusCode": 200,
+              "contentType": "text/html; charset=utf-8",
+              "proxyUsed": "basic",
+              "cacheState": "hit",
+              "cachedAt": "2026-10-13T05:03:03.971Z",
+              "creditsUsed": 1,
+              "concurrencyLimited": false
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Scrape URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape URL": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "595c8021-f612-4aea-ab7d-fce09edb9cfc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "138901305b151365ce875cae6631524069fa1f3e7b4159be1c35b446a2cdfde1"
+  },
+  "nodeGroups": [],
+  "id": "ARROcb8ZYeVVVGcj",
+  "tags": []
+}
