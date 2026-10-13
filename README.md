@@ -8,7 +8,7 @@ A small n8n workflow that checks company career pages, filters for relevant role
 
 **Workflow canvas**
 
-![Workflow canvas](https://github.com/user-attachments/assets/c9b4c8f7-3da2-4b0a-8ae7-e28ea2002e34")
+![Workflow canvas](https://github.com/user-attachments/assets/c9b4c8f7-3da2-4b0a-8ae7-e28ea2002e34)
 
 **Email digest received**
 
